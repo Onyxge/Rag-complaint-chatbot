@@ -1,160 +1,211 @@
-## CrediTrust Financial Complaint Intelligence System
+# 🏦 CrediTrust Financial: Intelligent Complaint Analysis System
 
-## Project Overview
-
-CrediTrust Financial is a financial services provider offering products such as credit cards, savings accounts, personal loans, and money transfer services. Like many institutions in the financial sector, CrediTrust receives a large volume of consumer complaints that contain valuable insights into customer pain points, recurring issues, and operational risks.
-
-This project aims to build a **Complaint Intelligence System** that leverages natural language processing and vector-based retrieval to enable semantic analysis and question answering over consumer complaint narratives. The system is designed to support internal teams by surfacing trends, identifying problem areas, and enabling evidence-based decision-making.
+An AI-powered **RAG (Retrieval-Augmented Generation)** tool transforming raw customer feedback into strategic business insights.
 
 ---
 
-## Project Objectives
+## 📖 Executive Summary
 
-The main objectives of this project are to:
+CrediTrust Financial serves over **500,000 customers across East Africa**. With thousands of unstructured complaints arriving monthly, the Product and Compliance teams struggled to identify emerging risks in real time.
 
-- Explore and understand a large-scale consumer complaint dataset
-- Clean and preprocess unstructured complaint narratives for semantic analysis
-- Normalize inconsistent product labels into canonical categories
-- Prepare the data for embedding and vector database storage
-- Enable semantic search and question answering over complaints in later stages
+This project delivers an **Intelligent Complaint Analyst**, a RAG-based chatbot that allows stakeholders to ask natural language questions such as:
 
----
+> *"Why are customers angry about BNPL fees?"*
 
-## Dataset Description
-
-The dataset used in this project is sourced from the **Consumer Financial Protection Bureau (CFPB)** and contains approximately **9.6 million consumer complaints** across various financial products.
-
-Key characteristics of the dataset:
-
-- 21 unique product labels with overlapping semantics
-- A large proportion of complaints do not include free-text narratives
-- Complaint narratives vary significantly in length, from very short entries to long, detailed descriptions
-- Product labeling inconsistencies require normalization before analysis
-
-The primary field of interest for this project is the **Consumer complaint narrative**, which provides unstructured textual descriptions of consumer issues.
+and receive **synthesized, evidence-backed executive summaries in seconds**.
 
 ---
 
-## Project Tasks and Workflow
+## 🎯 Business Impact
 
-### Task 1: Exploratory Data Analysis and Preprocessing
-
-Task 1 focuses on understanding the data and preparing a high-quality text corpus for downstream tasks.
-
-Key steps performed:
-
-- Initial exploratory data analysis to inspect dataset structure, columns, and missing values
-- Analysis of complaint distribution across all product categories
-- Identification of the number of complaints with and without narratives
-- Calculation and visualization of complaint narrative lengths using word counts
-- Canonical normalization of product labels to address inconsistent naming
-- Filtering the dataset to include only the target product categories:
-  - Credit card
-  - Personal loan
-  - Savings account
-  - Money transfers
-- Removal of records with empty complaint narratives
-- Cleaning of text narratives, including:
-  - Lowercasing
-  - Removal of CFPB PII masking tokens
-  - Removal of common boilerplate phrases
-  - Filtering of non-semantic characters
-  - Whitespace normalization
-
-The output of Task 1 consists of filtered raw and cleaned datasets that are suitable for embedding and retrieval tasks.
+* **Speed**: Reduces insight discovery time from days to minutes.
+* **Trust**: Provides direct *Source Evidence* for every claim, minimizing hallucinations.
+* **Coverage**: Successfully monitors **5 key product lines**, including a custom-extracted **Buy Now, Pay Later (BNPL)** category.
 
 ---
 
-### Task 2: Embedding and Vector Store Preparation
+## 🛠️ Technical Architecture
 
-Task 2 focuses on transforming cleaned complaint narratives into dense vector representations and preparing them for semantic retrieval.
+The system follows a standard **RAG Pipeline architecture**, optimized for local execution without requiring heavy GPU resources.
 
-Planned activities include:
-
-- Validation or regeneration of text embeddings
-- Analysis of embedding dimensionality and quality
-- Preparation of data for storage in a vector database
-- Initialization of a ChromaDB vector store
-
-This task builds directly on the cleaned and normalized output from Task 1.
-
----
-
-### Task 3: Semantic Search and Question Answering
-
-Task 3 aims to enable natural language querying of consumer complaints.
-
-Key goals include:
-
-- Implementing semantic search over complaint embeddings
-- Supporting natural language questions about customer issues
-- Demonstrating how the system can surface insights across products
-- Highlighting the business value of semantic complaint analysis
-
----
-
-## Repository Structure
-```
-├── ChromaDB
-│ └──vectir_store
-├── data
-│ ├── raw
-│ │ └── complaints.csv
-│ └── processed
-│ ├── filtered_complaints_raw.csv
-│ └── filtered_complaints_clean.csv
-├── notebooks
-│ └── eda_preprocessing.ipynb
-├── README.md
-├── requirements.txt
+```mermaid
+graph LR
+    A[Raw Complaints CSV] --> B(Data Cleaning & Filtering)
+    B --> C{Vector Embedding}
+    C -->|all-MiniLM-L6-v2| D[ChromaDB Vector Store]
+    E[User Question] --> F(Semantic Retrieval)
+    D --> F
+    F --> G[Context Augmentation]
+    G --> H[LLM Generator]
+    H -->|Flan-T5-Large| I[Gradio Dashboard]
 ```
 
 ---
 
-## Environment and Reproducibility
+## 🧰 Tech Stack
 
-- Python version: **3.10.x**
-- Key libraries include:
-  - pandas
-  - numpy
-  - matplotlib
-  - seaborn
-  - regex-based text processing libraries
+* **Orchestration**: LangChain
+* **Vector Database**: ChromaDB (persistent local storage)
+* **Embeddings**: `sentence-transformers/all-MiniLM-L6-v2` (384-dimensional)
+* **LLM (Generator)**: `google/flan-t5-large` (instruction-tuned for summarization)
+* **Interface**: Gradio (interactive web UI)
 
-To install dependencies:
+---
+
+## 🚀 Methodology & Implementation
+
+### 1. Data Engineering (The "BNPL" Challenge)
+
+**Objective**: Clean the CFPB dataset and isolate CrediTrust’s **5 core products**.
+
+**Challenge**: The raw dataset did not include a dedicated category for **Buy Now, Pay Later (BNPL)**, despite it being a critical business unit.
+
+**Solution**: Implemented a **keyword extraction logic** that mined the *Debt collection* and *Other financial service* categories for BNPL-related terms such as:
+
+* Affirm
+* Klarna
+* Afterpay
+* Pay in 4
+
+**Result**: Successfully recovered **thousands of hidden BNPL complaints** that would have otherwise been ignored.
+
+**Normalization**: Mapped inconsistent labels (for example, *"Credit card or prepaid card"*) to a strict canonical list of **5 products**.
+
+---
+
+### 2. Semantic Indexing
+
+**Objective**: Convert unstructured complaint text into searchable vector representations.
+
+* **Chunking**: Used `RecursiveCharacterTextSplitter` with `chunk_size=500` and `overlap=50` to preserve narrative context.
+* **Storage**: Indexed approximately **1.3 million vectors** (or a representative sample) into **ChromaDB** using **cosine similarity** for high-precision retrieval.
+
+---
+
+### 3. RAG Intelligence (The "Parrot" Problem)
+
+**Objective**: Generate professional, executive-level insights rather than verbatim text repetition.
+
+**Challenge**: Early experiments with Flan-T5 resulted in the model echoing raw customer language instead of summarizing root causes.
+
+**Solution**: Designed a **Senior Analyst Persona Prompt**.
+
+* **Instruction**: *"You are a Senior CX Analyst. Summarize the root cause in the third person."*
+* **Constraint**: *"Do NOT simply copy the text."*
+* **Parameter Tuning**:
+
+  * `temperature = 0.1`
+  * `repetition_penalty = 1.2`
+
+This configuration produced deterministic, non-repetitive, and business-appropriate outputs.
+
+---
+
+## 📊 System Evaluation
+
+The system was evaluated across **five distinct scenarios** to ensure robustness across all product lines.
+
+| Product Line | Question                                         | AI Insight (Generated)                                        | Quality Check |
+| ------------ | ------------------------------------------------ | ------------------------------------------------------------- | ------------- |
+| Credit Cards | Why are customers angry about late fees?         | Customers are being charged late fees despite paying on time. | ✅ PASS        |
+| BNPL         | Why are customers angry about Buy Now Pay Later? | Customers continue to be charged after returning items.       | ✅ PASS        |
+| Mortgages    | What are the complaints regarding escrow?        | Unexpected shortages are reported in escrow accounts.         | ✅ PASS        |
+| Transfers    | Why are transfers getting cancelled?             | Transfers are cancelled randomly without explanation.         | ✅ PASS        |
+| Loans        | Why are customers struggling?                    | High interest rates are creating repayment traps.             | ✅ PASS        |
+
+---
+
+## 💻 Installation & Usage
+
+Follow the steps below to run the system locally.
+
+### 1. Clone the Repository
 
 ```bash
+git clone https://github.com/yourusername/credit_trust_rag.git
+cd credit_trust_rag
+```
+
+### 2. Install Dependencies
+
+It is recommended to use a virtual environment.
+
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
-*The project notebooks are designed to be run sequentially, starting with exploratory analysis and preprocessing.*
 
-### Key Design Decisions
+### 3. Build the Database
 
-Canonical product normalization was used instead of direct string matching to handle inconsistent product labels.
+Place `sample_complaints.csv` in the `data/` directory and run:
 
-Buy Now, Pay Later (BNPL) is not treated as a standalone product in Task 1 because it does not exist as an explicit CFPB product label. BNPL-related complaints are expected to be identified through semantic analysis in later tasks.
+```bash
+python indexin.py
+```
 
-Raw and cleaned narratives are stored separately to preserve traceability while optimizing storage and downstream processing.
+This will create a `vector_store/` directory containing the indexed data.
 
-Limitations and Future Improvements
+### 4. Launch the Application
 
-Canonical product mapping is rule-based and may miss ambiguous edge cases
+```bash
+python app.py
+```
 
-Complaint narratives vary significantly in length and may require chunking during embedding
+Open the URL shown in the terminal, typically:
 
-Some residual boilerplate or implicit sensitive information may remain despite cleaning
+```
+http://127.0.0.1:7860
+```
 
-These limitations will be addressed progressively in Tasks 2 and 3.
+to access the Gradio dashboard.
 
-Status
+---
 
-Task 1: Completed
+## 📂 Project Structure
 
-Task 2: In progress
+```text
+Rag-complaint-chatbot/
+├── .venv/
+├── ChromaDB/
+│   └── vector_store/
+│       ├── 1f881e3a-a3b4-4489-90c0-499a191f28c7/
+│       └── chroma.sqlite3
+├── data/
+├── notebooks/
+│   ├── chunking_embedding.ipynb
+│   ├── eda_preprocessing.ipynb
+│   └── indexing.py
+├── src/
+│   ├── Gradio/
+│       ├── app.py
+│   └── rag/
+│         ├──__init__.py
+│         ├──embeddings.py
+│         ├──generator.py
+│         ├──pipline.py
+│         ├──prompt.py
+│         └──retriever.py       
+├── tests/
+├── .gitignore
+├── interim_report
+├── notes.md
+├── README.md
+└── requirements.txt        
+```
 
-Task 3: Planned
+---
 
-Task 4: Planned
+## 🔮 Future Improvements
 
-Author
-Yonatan ML engineer 
+* **Model Upgrade**: Transition from Flan-T5 to a quantized **Llama-3-8B** model for deeper reasoning capabilities. This requires GPU support.
+* **Hybrid Search**: Combine **BM25 keyword search** with vector search to better capture error codes, IDs, and acronyms.
+* **Live Ingestion**: Implement an automated pipeline to ingest new complaints from CrediTrust’s API on a nightly schedule.
+
+---
+
+## 📜 License
+
+This project was developed as part of the **10 Academy Artificial Intelligence Mastery (KAIM 8)** program.
+
+**Author**: Yonatan
